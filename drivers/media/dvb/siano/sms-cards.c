@@ -299,6 +299,7 @@ int sms_board_load_modules(int id)
 	case SMS1XXX_BOARD_HAUPPAUGE_WINDHAM:
 	case SMS1XXX_BOARD_HAUPPAUGE_TIGER_MINICARD:
 	case SMS1XXX_BOARD_HAUPPAUGE_TIGER_MINICARD_R2:
+	case SMS1XXX_BOARD_SIANO_NOVA_B:
 		request_module("smsdvb");
 		break;
 	default:
