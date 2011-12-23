@@ -28,6 +28,8 @@ source "drivers/staging/et131x/Kconfig"
 
 source "drivers/staging/slicoss/Kconfig"
 
+source "drivers/staging/a867/Kconfig"
+
 source "drivers/staging/go7007/Kconfig"
 
 source "drivers/staging/cx25821/Kconfig"
