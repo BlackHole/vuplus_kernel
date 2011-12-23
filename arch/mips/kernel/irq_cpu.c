@@ -110,7 +110,12 @@ void __init mips_cpu_irq_init(void)
 					 &mips_cpu_irq_controller,
 					 handle_percpu_irq);
 
+#if defined(CONFIG_BMIPS4380) || defined(CONFIG_BMIPS5000)
+        /* set up SW IRQs for SMP */
+        for (i = irq_base; i < irq_base + 8; i++)
+#else
 	for (i = irq_base + 2; i < irq_base + 8; i++)
+#endif
 		irq_set_chip_and_handler(i, &mips_cpu_irq_controller,
 					 handle_percpu_irq);
 }

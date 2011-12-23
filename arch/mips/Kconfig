@@ -122,6 +122,12 @@ config BCM63XX
 	help
 	 Support for BCM63XX based boards
 
+config BRCMSTB
+        bool "BCM7XXX/35XX STB/DTV/DVD chipsets"
+        help
+          This enables support for Broadcom set-top box, digital TV,
+          and DVD chipsets.
+
 config MIPS_COBALT
 	bool "Cobalt Server"
 	select CEVT_R4K
@@ -792,6 +798,7 @@ endchoice
 source "arch/mips/alchemy/Kconfig"
 source "arch/mips/ath79/Kconfig"
 source "arch/mips/bcm63xx/Kconfig"
+source "arch/mips/brcmstb/Kconfig"
 source "arch/mips/jazz/Kconfig"
 source "arch/mips/jz4740/Kconfig"
 source "arch/mips/lantiq/Kconfig"

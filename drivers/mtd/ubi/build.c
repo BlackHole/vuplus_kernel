@@ -1281,7 +1281,11 @@ out:
 	ubi_err("UBI error: cannot initialize UBI, error %d", err);
 	return err;
 }
+#if defined(CONFIG_BRCMSTB) && !defined(MODULE)
+late_initcall(ubi_init);        /* need to wait for the MTD driver */
+#else
 module_init(ubi_init);
+#endif
 
 static void __exit ubi_exit(void)
 {

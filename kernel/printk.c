@@ -984,6 +984,11 @@ static int __add_preferred_console(char *name, int idx, char *options,
 	struct console_cmdline *c;
 	int i;
 
+#ifdef CONFIG_BRCMSTB
+        /* Only support one console: the one most recently specified */
+        i = 0;
+#else
+
 	/*
 	 *	See if this tty is not yet registered, and
 	 *	if we have a slot free.
@@ -997,6 +1002,7 @@ static int __add_preferred_console(char *name, int idx, char *options,
 		}
 	if (i == MAX_CMDLINECONSOLES)
 		return -E2BIG;
+#endif
 	if (!brl_options)
 		selected_console = i;
 	c = &console_cmdline[i];

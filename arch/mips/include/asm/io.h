@@ -116,6 +116,10 @@ static inline void set_io_port_base(unsigned long base)
  */
 static inline unsigned long virt_to_phys(volatile const void *address)
 {
+#ifdef CONFIG_BRCM_UPPER_256MB
+	if ((unsigned long)address >= CAC_BASE_UPPER)
+		return (unsigned long)address - CAC_BASE_UPPER + UPPERMEM_START;
+#endif
 	return (unsigned long)address - PAGE_OFFSET + PHYS_OFFSET;
 }
 
@@ -133,6 +137,10 @@ static inline unsigned long virt_to_phys(volatile const void *address)
  */
 static inline void * phys_to_virt(unsigned long address)
 {
+#ifdef CONFIG_BRCM_UPPER_256MB
+	if (address >= UPPERMEM_START)
+		return (void *)(address + CAC_BASE_UPPER - UPPERMEM_START);
+#endif
 	return (void *)(address + PAGE_OFFSET - PHYS_OFFSET);
 }
 
@@ -199,6 +207,7 @@ static inline void __iomem * __ioremap_mode(phys_t offset, unsigned long size,
 		if (!size || last_addr < phys_addr)
 			return NULL;
 
+#if !defined(CONFIG_BRCM_UPPER_768MB)
 		/*
 		 * Map uncached objects in the low 512MB of address
 		 * space using KSEG1.
@@ -208,6 +217,7 @@ static inline void __iomem * __ioremap_mode(phys_t offset, unsigned long size,
 			return (void __iomem *)
 				(unsigned long)CKSEG1ADDR(phys_addr);
 	}
+#endif
 
 	return __ioremap(offset, size, flags);
 
@@ -329,14 +339,10 @@ static inline void pfx##write##bwlq(type val,				\
 			"dsrl32	%L0, %L0, 0"			"\n\t"	\
 			"dsll32	%M0, %M0, 0"			"\n\t"	\
 			"or	%L0, %L0, %M0"			"\n\t"	\
-			".set	push"				"\n\t"	\
-			".set	noreorder"			"\n\t"	\
-			".set	nomacro"			"\n\t"	\
 			"sd	%L0, %2"			"\n\t"	\
-			".set	pop"				"\n\t"	\
 			".set	mips0"				"\n"	\
 			: "=r" (__tmp)					\
-			: "0" (__val), "R" (*__mem));			\
+			: "0" (__val), "m" (*__mem));			\
 		if (irq)						\
 			local_irq_restore(__flags);			\
 	} else								\
@@ -359,16 +365,12 @@ static inline type pfx##read##bwlq(const volatile void __iomem *mem)	\
 			local_irq_save(__flags);			\
 		__asm__ __volatile__(					\
 			".set	mips3"		"\t\t# __readq"	"\n\t"	\
-			".set	push"				"\n\t"	\
-			".set	noreorder"			"\n\t"	\
-			".set	nomacro"			"\n\t"	\
 			"ld	%L0, %1"			"\n\t"	\
-			".set	pop"				"\n\t"	\
 			"dsra32	%M0, %L0, 0"			"\n\t"	\
 			"sll	%L0, %L0, 0"			"\n\t"	\
 			".set	mips0"				"\n"	\
 			: "=r" (__val)					\
-			: "R" (*__mem));				\
+			: "m" (*__mem));				\
 		if (irq)						\
 			local_irq_restore(__flags);			\
 	} else {							\

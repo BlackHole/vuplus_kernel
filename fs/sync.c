@@ -106,6 +106,21 @@ SYSCALL_DEFINE0(sync)
 	return 0;
 }
 
+/*
+ */
+int kernel_api_sync(void)
+{
+        wakeup_flusher_threads(0);
+        sync_filesystems(0);
+        sync_filesystems(1);
+        if (unlikely(laptop_mode))
+                laptop_sync_completion();
+        return 0;
+}
+EXPORT_SYMBOL(kernel_api_sync);
+
+
+
 static void do_sync_work(struct work_struct *work)
 {
 	/*

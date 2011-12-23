@@ -22,6 +22,10 @@
 
 #include <dma-coherence.h>
 
+#ifdef CONFIG_BRCMSTB
+#include <asm/brcmstb/brcmapi.h>
+#endif
+
 static inline struct page *dma_addr_to_page(struct device *dev,
 	dma_addr_t dma_addr)
 {
@@ -115,7 +119,15 @@ static void *mips_dma_alloc_coherent(struct device *dev, size_t size,
 
 		if (!plat_device_is_coherent(dev)) {
 			dma_cache_wback_inv((unsigned long) ret, size);
+#ifdef CONFIG_BRCM_UPPER_768MB
+                        if (brcm_map_coherent(*dma_handle, ret, PFN_ALIGN(size),
+                                        &ret, gfp)) {
+                                free_pages((unsigned long)ret, size);
+                                ret = NULL;
+                        }
+#else
 			ret = UNCAC_ADDR(ret);
+#endif
 		}
 	}
 
@@ -141,9 +153,12 @@ static void mips_dma_free_coherent(struct device *dev, size_t size, void *vaddr,
 		return;
 
 	plat_unmap_dma_mem(dev, dma_handle, size, DMA_BIDIRECTIONAL);
-
+#ifdef CONFIG_BRCM_UPPER_768MB
+        addr = (unsigned long)brcm_unmap_coherent(vaddr);
+#else
 	if (!plat_device_is_coherent(dev))
 		addr = CAC_ADDR(addr);
+#endif
 
 	free_pages(addr, get_order(size));
 }
@@ -263,6 +278,10 @@ static void mips_dma_sync_single_for_cpu(struct device *dev,
 	if (cpu_is_noncoherent_r10000(dev))
 		__dma_sync(dma_addr_to_page(dev, dma_handle),
 			   dma_handle & ~PAGE_MASK, size, direction);
+#ifdef CONFIG_BRCMSTB
+        brcm_sync_for_cpu(dev, dma_handle, size, direction);
+#endif
+
 }
 
 static void mips_dma_sync_single_for_device(struct device *dev,
@@ -284,6 +303,10 @@ static void mips_dma_sync_sg_for_cpu(struct device *dev,
 		if (cpu_is_noncoherent_r10000(dev))
 			__dma_sync(sg_page(sg), sg->offset, sg->length,
 				   direction);
+#ifdef CONFIG_BRCMSTB
+                brcm_sync_for_cpu_sg(sg, direction);
+#endif
+
 	}
 }
 

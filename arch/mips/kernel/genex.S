@@ -503,7 +503,12 @@ NESTED(nmi_handler, PT_SIZE, sp)
 	.set	noreorder
 	/* 0x7c03e83b: rdhwr v1,$29 */
 	MFC0	k1, CP0_EPC
+#if defined(CONFIG_BRCMSTB) && defined(_brcm_rdhwr)
+	/* special RDHWR instruction encoding on some toolchains */
+	lui	k0, 0xec03
+#else
 	lui	k0, 0x7c03
+#endif
 	lw	k1, (k1)
 	ori	k0, 0xe83b
 	.set	reorder

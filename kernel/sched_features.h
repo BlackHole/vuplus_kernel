@@ -69,6 +69,6 @@ SCHED_FEAT(NONTASK_POWER, 1)
  * Queue remote wakeups on the target CPU and process them
  * using the scheduler IPI. Reduces rq->lock contention/bounces.
  */
-SCHED_FEAT(TTWU_QUEUE, 1)
+SCHED_FEAT(TTWU_QUEUE, 0)
 
 SCHED_FEAT(FORCE_SD_OVERLAP, 0)

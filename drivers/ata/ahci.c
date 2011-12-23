@@ -1123,6 +1123,12 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
 			pi.flags |= ATA_FLAG_FPDMA_AA;
 	}
 
+#if defined(CONFIG_BCM7422A0) || defined(CONFIG_BCM7425A0) || \
+        defined(CONFIG_BCM7346A0) || defined(CONFIG_BCM7231A0)
+        /* HW7425-442: NCQ broken on A0 silicon */
+        pi.flags &= ~ATA_FLAG_NCQ;
+#endif
+
 	if (hpriv->cap & HOST_CAP_PMP)
 		pi.flags |= ATA_FLAG_PMP;
 

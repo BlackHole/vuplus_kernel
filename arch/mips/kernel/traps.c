@@ -56,6 +56,11 @@
 #include <asm/stacktrace.h>
 #include <asm/uasm.h>
 
+#ifdef CONFIG_BRCMSTB
+#include <asm/brcmstb/brcmapi.h>
+#endif
+
+
 extern void check_wait(void);
 extern asmlinkage void r4k_wait(void);
 extern asmlinkage void rollback_handle_int(void);
@@ -605,6 +610,11 @@ static int simulate_llsc(struct pt_regs *regs, unsigned int opcode)
 static int simulate_rdhwr(struct pt_regs *regs, unsigned int opcode)
 {
 	struct thread_info *ti = task_thread_info(current);
+#ifdef CONFIG_BRCMSTB
+        if (brcm_simulate_opcode(regs, opcode) == 0)
+                return 0;
+#endif
+
 
 	if ((opcode & OPCODE) == SPEC3 && (opcode & FUNC) == RDHWR) {
 		int rd = (opcode & RD) >> 11;
@@ -1354,6 +1364,10 @@ unsigned long ebase;
 unsigned long exception_handlers[32];
 unsigned long vi_handlers[64];
 
+#ifdef CONFIG_BRCMSTB
+EXPORT_SYMBOL(ebase);
+#endif
+
 void __init *set_except_vector(int n, void *addr)
 {
 	unsigned long handler = (unsigned long) addr;
@@ -1546,7 +1560,11 @@ void __cpuinit per_cpu_trap_init(void)
 	change_c0_status(ST0_CU|ST0_MX|ST0_RE|ST0_FR|ST0_BEV|ST0_TS|ST0_KX|ST0_SX|ST0_UX,
 			 status_set);
 
+#if defined(CONFIG_BMIPS5000)
+        if (1)
+#else
 	if (cpu_has_mips_r2)
+#endif
 		hwrena |= 0x0000000f;
 
 	if (!noulri && cpu_has_userlocal)
@@ -1608,7 +1626,12 @@ void __cpuinit per_cpu_trap_init(void)
 	if (bootTC) {
 #endif /* CONFIG_MIPS_MT_SMTC */
 		cpu_cache_init();
-		tlb_init();
+#ifdef CONFIG_BRCMSTB
+                brcm_tlb_init();
+#else
+                tlb_init();
+#endif
+
 #ifdef CONFIG_MIPS_MT_SMTC
 	} else if (!secondaryTC) {
 		/*
@@ -1677,9 +1700,13 @@ void __init trap_init(void)
 		ebase = (unsigned long)
 			__alloc_bootmem(size, 1 << fls(size), 0);
 	} else {
+#ifdef CONFIG_BRCMSTB
+                ebase = brcm_setup_ebase();
+#else
 		ebase = CKSEG0;
 		if (cpu_has_mips_r2)
 			ebase += (read_c0_ebase() & 0x3ffff000);
+#endif
 	}
 
 	per_cpu_trap_init();

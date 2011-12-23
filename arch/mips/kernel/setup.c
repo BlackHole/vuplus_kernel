@@ -33,6 +33,10 @@
 #include <asm/system.h>
 #include <asm/prom.h>
 
+#ifdef CONFIG_BRCMSTB
+#include <asm/brcmstb/brcmapi.h>
+#endif
+
 struct cpuinfo_mips cpu_data[NR_CPUS] __read_mostly;
 
 EXPORT_SYMBOL(cpu_data);
@@ -389,7 +393,12 @@ static void __init bootmem_init(void)
 		size = end - start;
 
 		/* Register lowmem ranges */
+#ifdef CONFIG_BRCMSTB
+		/* carve out space for bmem */
+		brcm_free_bootmem(PFN_PHYS(start), size << PAGE_SHIFT);
+#else
 		free_bootmem(PFN_PHYS(start), size << PAGE_SHIFT);
+#endif
 		memory_present(0, start, end);
 	}
 

@@ -54,7 +54,12 @@ static unsigned int __init serial_in(struct uart_port *port, int offset)
 	case UPIO_MEM:
 		return readb(port->membase + offset);
 	case UPIO_MEM32:
+#ifdef CONFIG_BRCMSTB
+                /* 32-bit accesses only; no byteswap on BE */
+                return __raw_readl(port->membase + (offset << port->regshift));
+#else
 		return readl(port->membase + (offset << 2));
+#endif
 	case UPIO_PORT:
 		return inb(port->iobase + offset);
 	default:
@@ -69,7 +74,11 @@ static void __init serial_out(struct uart_port *port, int offset, int value)
 		writeb(value, port->membase + offset);
 		break;
 	case UPIO_MEM32:
+#ifdef CONFIG_BRCMSTB
+                __raw_writel(value, port->membase + (offset << port->regshift));
+#else
 		writel(value, port->membase + (offset << 2));
+#endif
 		break;
 	case UPIO_PORT:
 		outb(value, port->iobase + offset);

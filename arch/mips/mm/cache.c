@@ -20,6 +20,10 @@
 #include <asm/processor.h>
 #include <asm/cpu.h>
 #include <asm/cpu-features.h>
+#ifdef CONFIG_BRCMSTB
+#include <asm/brcmstb/brcmapi.h>
+#endif
+
 
 /* Cache operations. */
 void (*flush_cache_all)(void);
@@ -34,6 +38,12 @@ void (*local_flush_icache_range)(unsigned long start, unsigned long end);
 
 void (*__flush_cache_vmap)(void);
 void (*__flush_cache_vunmap)(void);
+
+void (*__flush_kernel_vmap_range)(unsigned long vaddr, int size);
+void (*__invalidate_kernel_vmap_range)(unsigned long vaddr, int size);
+
+EXPORT_SYMBOL_GPL(__flush_kernel_vmap_range);
+
 
 /* MIPS specific cache operations */
 void (*flush_cache_sigtramp)(unsigned long addr);
@@ -67,7 +77,11 @@ SYSCALL_DEFINE3(cacheflush, unsigned long, addr, unsigned long, bytes,
 	if (!access_ok(VERIFY_WRITE, (void __user *) addr, bytes))
 		return -EFAULT;
 
+#ifdef CONFIG_BRCMSTB
+        return brcm_cacheflush(addr, bytes, cache);
+#else
 	flush_icache_range(addr, addr + bytes);
+#endif
 
 	return 0;
 }

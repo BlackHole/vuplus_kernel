@@ -422,13 +422,25 @@ static void mem_serial_out(struct uart_port *p, int offset, int value)
 static void mem32_serial_out(struct uart_port *p, int offset, int value)
 {
 	offset = map_8250_out_reg(p, offset) << p->regshift;
+#ifdef CONFIG_BRCMSTB
+        /* not on PCI; avoid endian swapping */
+        __raw_writel(value, p->membase + offset);
+
+        /* flush out the write transaction (required on BMIPS5000) */
+        mb();
+#else
 	writel(value, p->membase + offset);
+#endif
 }
 
 static unsigned int mem32_serial_in(struct uart_port *p, int offset)
 {
 	offset = map_8250_in_reg(p, offset) << p->regshift;
+#ifdef CONFIG_BRCMSTB
+        return __raw_readl(p->membase + offset);
+#else
 	return readl(p->membase + offset);
+#endif
 }
 
 static unsigned int au_serial_in(struct uart_port *p, int offset)

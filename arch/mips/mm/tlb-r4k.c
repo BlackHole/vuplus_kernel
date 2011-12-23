@@ -20,6 +20,10 @@
 #include <asm/pgtable.h>
 #include <asm/system.h>
 
+#ifdef CONFIG_BRCMSTB
+#include <asm/brcmstb/brcmstb.h>
+#endif
+
 extern void build_tlb_refill_handler(void);
 
 /*
@@ -65,6 +69,18 @@ extern void build_tlb_refill_handler(void);
 #define FLUSH_ITLB_VM(vma)
 
 #endif
+
+/* This function will clear all mm contexts on calling cpu
+ * To produce desired effect it must be called
+ * when mm_cpumask for all mm contexts is cleared
+ */
+void local_flush_tlb_all_mm(void)
+{
+        struct task_struct *p;
+        for_each_process(p)
+                if (p->mm)
+                        local_flush_tlb_mm(p->mm);
+}
 
 void local_flush_tlb_all(void)
 {
